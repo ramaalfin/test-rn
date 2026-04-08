@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { searchMovies } from '../api/movies';
-import type { Movie, PaginatedResponse } from '../types/movie';
+import type { Movie, PaginatedResponse } from '../types/api.types';
 
 export const searchKeys = {
     all: ['search'] as const,

@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import theme from '../theme';
-import type { Movie } from '../types/movie';
+import type { Movie } from '../types/api.types';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import MovieCard from '../components/MovieCard';
 import EmptyState from '../components/EmptyState';

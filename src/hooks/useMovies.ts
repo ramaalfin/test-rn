@@ -1,6 +1,6 @@
-import {useQuery} from '@tanstack/react-query';
-import {getPopularMovies} from '../api/movies';
-import type {Movie, PaginatedResponse} from '../types/movie';
+import { useQuery } from '@tanstack/react-query';
+import { getPopularMovies } from '../api/movies';
+import type { Movie, PaginatedResponse } from '../types/api.types';
 
 export const movieKeys = {
   all: ['movies'] as const,

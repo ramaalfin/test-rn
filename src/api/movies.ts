@@ -5,7 +5,7 @@ import type {
   MovieDetail,
   Credits,
   ReviewsResponse,
-} from '../types/movie';
+} from '../types/api.types';
 
 // Get popular movies with pagination
 export const getPopularMovies = async (

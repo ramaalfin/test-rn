@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -9,11 +8,15 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import MovieCard from '../components/MovieCard';
-import useInfiniteMovies from '../hooks/useInfiniteMovies';
-import type { Movie } from '../types/movie';
+import CardItem from '../components/CardItem';
+import useItems from '../hooks/useItems';
+import type { Item } from '../types/api.types';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import useAppTheme from '../hooks/useAppTheme';
+import { SkeletonCard } from '../components/LoadingSkeleton';
+import ErrorState from '../components/ErrorState';
+import EmptyState from '../components/EmptyState';
+import useAuthStore from '../stores/useAuthStore';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -22,16 +25,14 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<
 
 const HomeScreen: React.FC = () => {
   const {
-    data,
+    data: items,
     isLoading,
     isError,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
     refetch,
     isRefetching,
-  } = useInfiniteMovies();
+  } = useItems();
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const { user } = useAuthStore();
 
   const theme = useAppTheme();
 
@@ -40,60 +41,71 @@ const HomeScreen: React.FC = () => {
       flex: 1,
       backgroundColor: theme.colors.background,
     },
-    center: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: theme.colors.background,
+    header: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      backgroundColor: theme.colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    emailText: {
+      ...theme.typography.body,
+      color: theme.colors.text.secondary,
     },
     list: {
       paddingVertical: theme.spacing.sm,
     },
-    footer: {
-      paddingVertical: theme.spacing.lg,
-      alignItems: 'center',
-    },
-    errorText: {
-      ...theme.typography.body,
-      color: theme.colors.error,
+    skeletonContainer: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.sm,
     },
   });
 
-  console.log(theme);
-
-  const handleMoviePress = (movie: Movie) => {
-    navigation.navigate('Detail', { movieId: movie.id });
+  const handleItemPress = (id: number) => {
+    navigation.navigate('Detail', { itemId: id });
   };
 
-  const movies = data?.pages.flatMap(page => page.results) ?? [];
-
-  const handleLoadMore = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  };
-
-  const renderFooter = () => {
-    if (!isFetchingNextPage) return null;
-    return (
-      <View style={styles.footer}>
-        <ActivityIndicator size="small" color={theme.colors.secondary} />
-      </View>
-    );
-  };
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <Text style={styles.emailText}>
+        {user?.email || 'Not logged in'}
+      </Text>
+    </View>
+  );
 
   if (isLoading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={theme.colors.secondary} />
+      <View style={styles.container}>
+        {renderHeader()}
+        <View style={styles.skeletonContainer}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <SkeletonCard key={index} style={{ marginBottom: theme.spacing.md }} />
+          ))}
+        </View>
       </View>
     );
   }
 
   if (isError) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>Something went wrong.</Text>
+      <View style={styles.container}>
+        {renderHeader()}
+        <ErrorState
+          message="Failed to load items. Please try again."
+          onRetry={() => refetch()}
+        />
+      </View>
+    );
+  }
+
+  if (!items || items.length === 0) {
+    return (
+      <View style={styles.container}>
+        {renderHeader()}
+        <EmptyState
+          message="No items available at the moment."
+          icon="📭"
+        />
       </View>
     );
   }
@@ -101,15 +113,14 @@ const HomeScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={movies}
+        data={items}
         keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => (
-          <MovieCard movie={item} onPress={handleMoviePress} />
+          <CardItem item={item} onPress={handleItemPress} />
         )}
         contentContainerStyle={styles.list}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={renderFooter}
+        ListHeaderComponent={renderHeader}
+        initialNumToRender={10}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}

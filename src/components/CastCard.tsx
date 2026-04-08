@@ -1,7 +1,7 @@
 import React from 'react';
 import {Image, StyleSheet, Text, View} from 'react-native';
 import theme from '../theme';
-import type {Cast} from '../types/movie';
+import type {Cast} from '../types/api.types';
 
 interface CastCardProps {
   cast: Cast;

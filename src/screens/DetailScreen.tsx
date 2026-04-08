@@ -1,200 +1,107 @@
-import React, {useEffect, useState} from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import React from 'react';
+import {ScrollView, StyleSheet, View} from 'react-native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import theme from '../theme';
-import type {RootStackParamList} from '../navigation/RootNavigator';
-import {
-  useMovieDetail,
-  useMovieCredits,
-  useMovieReviews,
-} from '../hooks/useMovieDetail';
-import useFavoritesStore from '../stores/useFavoritesStore';
-import RatingStars from '../components/RatingStars';
-import CastCard from '../components/CastCard';
-import ReviewCard from '../components/ReviewCard';
-import ReviewModal from '../components/ReviewModal';
-import UserReviewCard from '../components/UserReviewCard';
-import {formatDate, formatRuntime} from '../utils/formatters';
-import {getUserReviews, deleteUserReview} from '../utils/storage';
+import type {AppStackParamList} from '../navigation/AppNavigator';
+import useItemDetail from '../hooks/useItemDetail';
+import CardItem from '../components/CardItem';
+import {LoadingSkeleton, SkeletonCard} from '../components/LoadingSkeleton';
+import ErrorState from '../components/ErrorState';
+import EmptyState from '../components/EmptyState';
+import useAppTheme from '../hooks/useAppTheme';
 
-type DetailScreenProps = NativeStackScreenProps<RootStackParamList, 'Detail'>;
+type DetailScreenProps = NativeStackScreenProps<AppStackParamList, 'Detail'>;
 
+/**
+ * DetailScreen Component
+ * 
+ * Displays detailed information about a single item from JSONPlaceholder API.
+ * Replaces the old movie detail screen with a simpler, generic item detail view.
+ * 
+ * Requirements:
+ * - 6.1: Navigate to detail screen with item ID
+ * - 6.2: Fetch detailed data from Public API
+ * - 6.3: Reuse CardItem component for consistency
+ * - 6.4: Display skeleton loaders during loading
+ * - 6.5: Display error state with retry button
+ * - 6.6: Display empty state when no data
+ * - 6.7: Structured layout with clear typography hierarchy
+ * - 11.4: Clear typography hierarchy
+ * - 11.7: Structured layout with visual hierarchy
+ * - 18.7: Use generic item types and endpoints
+ * 
+ * Features:
+ * - Uses useItemDetail hook for data fetching
+ * - Displays LoadingSkeleton during loading (not ActivityIndicator)
+ * - Displays ErrorState with retry functionality
+ * - Displays EmptyState when no data returned
+ * - Reuses CardItem component for consistent styling
+ * - Clean, minimal layout focused on content
+ */
 const DetailScreen: React.FC<DetailScreenProps> = ({route}) => {
-  const {movieId} = route.params;
+  const {itemId} = route.params;
+  const theme = useAppTheme();
 
-  const {data: movie, isLoading: movieLoading} = useMovieDetail(movieId);
-  const {data: credits} = useMovieCredits(movieId);
-  const {data: reviews} = useMovieReviews(movieId);
+  const {data: item, isLoading, isError, error, refetch} = useItemDetail(itemId);
 
-  const [userReviews, setUserReviews] = useState<any[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
-
-  const {isFavorite, addFavorite, removeFavorite, loadFavorites} =
-    useFavoritesStore();
-
-  useEffect(() => {
-    loadFavorites();
-    loadUserReviews();
-  }, [loadFavorites]);
-
-  const loadUserReviews = async () => {
-    const reviews = await getUserReviews(movieId);
-    setUserReviews(reviews);
-  };
-
-  const handleDeleteUserReview = async (reviewId: string) => {
-    await deleteUserReview(movieId, reviewId);
-    loadUserReviews();
-  };
-
-  const handleFavoriteToggle = () => {
-    if (!movie) return;
-
-    if (isFavorite(movieId)) {
-      removeFavorite(movieId);
-    } else {
-      addFavorite({
-        id: movie.id,
-        title: movie.title,
-        overview: movie.overview,
-        poster_path: movie.poster_path,
-        backdrop_path: movie.backdrop_path,
-        vote_average: movie.vote_average,
-        vote_count: movie.vote_count,
-        release_date: movie.release_date,
-        genre_ids: movie.genres.map(g => g.id),
-        popularity: movie.popularity,
-        original_language: movie.original_language,
-        adult: movie.adult,
-      });
-    }
-  };
-
-  if (movieLoading) {
+  /**
+   * Loading State
+   * Requirements: 6.4 - Display skeleton loaders during loading
+   */
+  if (isLoading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={theme.colors.secondary} />
+      <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+        <View style={[styles.content, {padding: theme.spacing.lg}]}>
+          <SkeletonCard />
+        </View>
       </View>
     );
   }
 
-  if (!movie) {
+  /**
+   * Error State
+   * Requirements: 6.5 - Display error state with retry button
+   */
+  if (isError) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>Movie not found</Text>
-      </View>
-    );
-  }
-
-  const backdropUrl = movie.backdrop_path
-    ? `https://image.tmdb.org/t/p/w780${movie.backdrop_path}`
-    : null;
-
-  const posterUrl = movie.poster_path
-    ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
-    : null;
-
-  const cast = credits?.cast.slice(0, 10) || [];
-  const movieReviews = reviews?.results || [];
-
-  return (
-    <ScrollView style={styles.container}>
-      {backdropUrl && (
-        <Image source={{uri: backdropUrl}} style={styles.backdrop} />
-      )}
-
-      <View style={styles.content}>
-        <View style={styles.headerSection}>
-          {posterUrl && (
-            <Image source={{uri: posterUrl}} style={styles.poster} />
-          )}
-          <View style={styles.headerInfo}>
-            <Text style={styles.title}>{movie.title}</Text>
-            <RatingStars rating={movie.vote_average} size={16} />
-            <Text style={styles.metaText}>
-              {formatDate(movie.release_date)} • {formatRuntime(movie.runtime)}
-            </Text>
-            <View style={styles.genresContainer}>
-              {movie.genres.map(genre => (
-                <View key={genre.id} style={styles.genreBadge}>
-                  <Text style={styles.genreText}>{genre.name}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.favoriteButton}
-          onPress={handleFavoriteToggle}>
-          <Text style={styles.favoriteIcon}>
-            {isFavorite(movieId) ? '❤️' : '🤍'}
-          </Text>
-          <Text style={styles.favoriteText}>
-            {isFavorite(movieId) ? 'Remove from Favorites' : 'Add to Favorites'}
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Overview</Text>
-          <Text style={styles.overview}>{movie.overview}</Text>
-        </View>
-
-        {cast.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Cast</Text>
-            <FlatList
-              horizontal
-              data={cast}
-              keyExtractor={item => item.id.toString()}
-              renderItem={({item}) => <CastCard cast={item} />}
-              showsHorizontalScrollIndicator={false}
-            />
-          </View>
-        )}
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>My Reviews</Text>
-          <TouchableOpacity
-            style={styles.writeReviewButton}
-            onPress={() => setModalVisible(true)}>
-            <Text style={styles.writeReviewText}>✍️ Write a Review</Text>
-          </TouchableOpacity>
-          {userReviews.map(review => (
-            <UserReviewCard
-              key={review.id}
-              review={review}
-              onDelete={() => handleDeleteUserReview(review.id)}
-            />
-          ))}
-        </View>
-
-        <ReviewModal
-          visible={modalVisible}
-          movieId={movieId}
-          onClose={() => setModalVisible(false)}
-          onReviewAdded={loadUserReviews}
+      <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+        <ErrorState
+          message={error instanceof Error ? error.message : 'Failed to load item details'}
+          onRetry={() => refetch()}
         />
+      </View>
+    );
+  }
 
-        {movieReviews.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              TMDB Reviews ({movieReviews.length})
-            </Text>
-            {movieReviews.map(review => (
-              <ReviewCard key={review.id} review={review} />
-            ))}
-          </View>
-        )}
+  /**
+   * Empty State
+   * Requirements: 6.6 - Display empty state when no data
+   */
+  if (!item) {
+    return (
+      <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+        <EmptyState
+          message="Item not found"
+          icon="🔍"
+        />
+      </View>
+    );
+  }
+
+  /**
+   * Success State
+   * Requirements:
+   * - 6.3: Reuse CardItem component for consistency
+   * - 6.7: Structured layout with clear typography hierarchy
+   * - 11.4: Clear typography hierarchy
+   * - 11.7: Structured layout with visual hierarchy
+   */
+  return (
+    <ScrollView style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <View style={[styles.content, {padding: theme.spacing.lg}]}>
+        <CardItem
+          item={item}
+          onPress={() => {}} // No-op since we're already on detail screen
+        />
       </View>
     </ScrollView>
   );
@@ -203,108 +110,9 @@ const DetailScreen: React.FC<DetailScreenProps> = ({route}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  backdrop: {
-    width: '100%',
-    height: 200,
-    backgroundColor: theme.colors.skeleton,
   },
   content: {
-    padding: theme.spacing.lg,
-  },
-  headerSection: {
-    flexDirection: 'row',
-    marginBottom: theme.spacing.lg,
-  },
-  poster: {
-    width: 120,
-    height: 180,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.colors.skeleton,
-    marginRight: theme.spacing.md,
-  },
-  headerInfo: {
     flex: 1,
-  },
-  title: {
-    ...theme.typography.heading,
-    marginBottom: theme.spacing.sm,
-  },
-  metaText: {
-    ...theme.typography.body,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.sm,
-    marginBottom: theme.spacing.sm,
-  },
-  genresContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: theme.spacing.xs,
-  },
-  genreBadge: {
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
-    marginRight: theme.spacing.xs,
-    marginBottom: theme.spacing.xs,
-  },
-  genreText: {
-    ...theme.typography.caption,
-    color: theme.colors.text.secondary,
-  },
-  favoriteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.card,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing.lg,
-    ...theme.shadows.card,
-  },
-  favoriteIcon: {
-    fontSize: 24,
-    marginRight: theme.spacing.sm,
-  },
-  favoriteText: {
-    ...theme.typography.body,
-    fontWeight: '600',
-    color: theme.colors.text.primary,
-  },
-  section: {
-    marginBottom: theme.spacing.xl,
-  },
-  sectionTitle: {
-    ...theme.typography.subheading,
-    marginBottom: theme.spacing.md,
-  },
-  writeReviewButton: {
-    backgroundColor: theme.colors.secondary,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.md,
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-  },
-  writeReviewText: {
-    ...theme.typography.body,
-    color: theme.colors.text.inverse,
-    fontWeight: '600',
-  },
-  overview: {
-    ...theme.typography.body,
-    lineHeight: 22,
-  },
-  errorText: {
-    ...theme.typography.body,
-    color: theme.colors.error,
   },
 });
 

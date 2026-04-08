@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Movie } from '../types/movie';
+import type { Movie } from '../types/api.types';
 
 const FAVORITES_KEY = '@favorites';
 

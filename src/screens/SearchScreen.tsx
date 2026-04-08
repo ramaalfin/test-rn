@@ -15,7 +15,7 @@ import EmptyState from '../components/EmptyState';
 import useMovieSearch from '../hooks/useMovieSearch';
 import useRecentSearches from '../hooks/useRecentSearches';
 import theme from '../theme';
-import type { Movie } from '../types/movie';
+import type { Movie } from '../types/api.types';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import useAppTheme from '../hooks/useAppTheme';
 

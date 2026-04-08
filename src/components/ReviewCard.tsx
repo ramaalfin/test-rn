@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import theme from '../theme';
-import type {Review} from '../types/movie';
+import type {Review} from '../types/api.types';
 import {formatDate} from '../utils/formatters';
 
 interface ReviewCardProps {

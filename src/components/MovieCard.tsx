@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import theme from '../theme';
-import type { Movie } from '../types/movie';
+import type { Movie } from '../types/api.types';
 import RatingStars from './RatingStars';
 import { formatDate } from '../utils/formatters';
 import useAppTheme from '../hooks/useAppTheme';
