@@ -18,7 +18,7 @@ const APP_VERSION = '0.0.1';
 const SettingsScreen: React.FC = () => {
   const theme = useAppTheme();
   const queryClient = useQueryClient();
-  const {isDarkMode, language, toggleDarkMode, setLanguage, loadSettings} =
+  const {isDarkMode, toggleDarkMode, loadSettings} =
     useSettingsStore();
   const {logout, user} = useAuth();
   const [localDarkMode, setLocalDarkMode] = useState(isDarkMode);
@@ -34,11 +34,6 @@ const SettingsScreen: React.FC = () => {
   const handleDarkModeToggle = () => {
     setLocalDarkMode(!localDarkMode);
     toggleDarkMode();
-  };
-
-  const handleLanguageChange = async (lang: 'en-US' | 'id-ID') => {
-    await setLanguage(lang);
-    queryClient.invalidateQueries();
   };
 
   const handleLogout = () => {
@@ -93,6 +88,7 @@ const SettingsScreen: React.FC = () => {
       padding: theme.spacing.lg,
       borderRadius: theme.borderRadius.md,
       ...theme.shadows.card,
+      minHeight: 44,
     },
     settingInfo: {
       flex: 1,
@@ -189,6 +185,7 @@ const SettingsScreen: React.FC = () => {
       padding: theme.spacing.lg,
       borderRadius: theme.borderRadius.md,
       ...theme.shadows.card,
+      minHeight: 44,
     },
     logoutButtonText: {
       ...theme.typography.body,
@@ -210,7 +207,11 @@ const SettingsScreen: React.FC = () => {
   });
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      accessibilityLabel="Settings screen"
+      accessibilityRole="none"
+    >
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Appearance</Text>
         <View style={styles.settingItem}>
@@ -228,42 +229,12 @@ const SettingsScreen: React.FC = () => {
               true: theme.colors.secondary,
             }}
             thumbColor={theme.colors.card}
+            accessibilityLabel="Dark mode toggle"
+            accessibilityHint={`Dark mode is currently ${localDarkMode ? 'enabled' : 'disabled'}. Double tap to ${localDarkMode ? 'disable' : 'enable'} dark mode`}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: localDarkMode }}
           />
         </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Language</Text>
-        <TouchableOpacity
-          style={[
-            styles.languageOption,
-            language === 'en-US' && styles.languageOptionActive,
-          ]}
-          onPress={() => handleLanguageChange('en-US')}>
-          <Text
-            style={[
-              styles.languageText,
-              language === 'en-US' && styles.languageTextActive,
-            ]}>
-            🇺🇸 English
-          </Text>
-          {language === 'en-US' && <Text style={styles.checkmark}>✓</Text>}
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.languageOption,
-            language === 'id-ID' && styles.languageOptionActive,
-          ]}
-          onPress={() => handleLanguageChange('id-ID')}>
-          <Text
-            style={[
-              styles.languageText,
-              language === 'id-ID' && styles.languageTextActive,
-            ]}>
-            🇮🇩 Indonesian
-          </Text>
-          {language === 'id-ID' && <Text style={styles.checkmark}>✓</Text>}
-        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
@@ -274,21 +245,30 @@ const SettingsScreen: React.FC = () => {
         </View>
         <View style={styles.infoItem}>
           <Text style={styles.infoLabel}>API</Text>
-          <Text style={styles.infoValue}>TMDB</Text>
+          <Text style={styles.infoValue}>JSONPlaceholder</Text>
         </View>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
         {user && (
-          <View style={styles.userInfo}>
+          <View 
+            style={styles.userInfo}
+            accessibilityLabel={`Logged in as ${user.email}`}
+            accessibilityRole="text"
+          >
             <Text style={styles.userEmail}>{user.email}</Text>
           </View>
         )}
         <TouchableOpacity
           style={styles.logoutButton}
           onPress={handleLogout}
-          activeOpacity={0.8}>
+          activeOpacity={0.8}
+          accessibilityLabel="Logout"
+          accessibilityHint="Double tap to sign out of your account"
+          accessibilityRole="button"
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </View>

@@ -44,7 +44,12 @@ const CardItem: React.FC<CardItemProps> = ({ item, onPress }) => {
       <TouchableOpacity
         style={styles.container}
         onPress={() => onPress(item.id)}
-        activeOpacity={0.7}>
+        activeOpacity={0.7}
+        accessibilityLabel={`${item.title}`}
+        accessibilityHint="Double tap to view details"
+        accessibilityRole="button"
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
         <Text style={styles.title} numberOfLines={2}>
           {item.title}
         </Text>

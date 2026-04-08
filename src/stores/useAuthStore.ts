@@ -20,6 +20,7 @@ interface AuthState {
     isLoading: boolean;
     error: string | null;
     login: (email: string, password: string) => Promise<void>;
+    loginWithGoogle: () => Promise<void>;
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     clearError: () => void;
@@ -81,6 +82,7 @@ const useAuthStore = create<AuthState>((set, _get) => ({
                     id: parseInt(payload.sub, 10),
                     email: payload.email,
                     name: payload.name,
+                    picture: payload.picture,
                 };
 
                 console.log('[AuthStore] User authenticated:', user.email);
@@ -133,6 +135,48 @@ const useAuthStore = create<AuthState>((set, _get) => ({
 
             set({
                 user: response.user,
+                token: response.token,
+                isAuthenticated: true,
+                isLoading: false,
+                error: null,
+            });
+        } catch (error) {
+            const errorMessage = error instanceof Error
+                ? error.message
+                : 'An unexpected error occurred';
+
+            set({
+                user: null,
+                token: null,
+                isAuthenticated: false,
+                isLoading: false,
+                error: errorMessage,
+            });
+
+            throw error;
+        }
+    },
+
+    /**
+     * Login with Google OAuth
+     * Initiates Google Sign-In flow and stores token and user data on success
+     * 
+     * @throws Error with user-friendly message if login fails
+     */
+    loginWithGoogle: async () => {
+        try {
+            set({ isLoading: true, error: null });
+
+            const response = await AuthService.loginWithGoogle();
+
+            // Include picture field from Google user data
+            const user: User = {
+                ...response.user,
+                picture: response.user.picture,
+            };
+
+            set({
+                user,
                 token: response.token,
                 isAuthenticated: true,
                 isLoading: false,

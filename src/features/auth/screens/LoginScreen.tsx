@@ -17,7 +17,7 @@ import { useAppTheme } from '../../../hooks/useAppTheme';
 
 const LoginScreen: React.FC = () => {
   const theme = useAppTheme();
-  const { login, isLoading, error, clearError } = useAuth();
+  const { login, loginWithGoogle, isLoading, error, clearError } = useAuth();
 
   // Form state
   const [email, setEmail] = useState('');
@@ -85,6 +85,19 @@ const LoginScreen: React.FC = () => {
   };
 
   /**
+   * Handle Google Sign-In button press
+   */
+  const handleGoogleSignIn = async () => {
+    try {
+      await loginWithGoogle();
+      // Navigation to app stack is handled by RootNavigator
+    } catch (err) {
+      // Error is already set in the auth store
+      console.error('Google Sign-In error:', err);
+    }
+  };
+
+  /**
    * Handle email input change
    */
   const handleEmailChange = (text: string) => {
@@ -145,9 +158,18 @@ const LoginScreen: React.FC = () => {
                 returnKeyType="next"
                 onSubmitEditing={() => passwordInputRef.current?.focus()}
                 editable={!isLoading}
+                accessibilityLabel="Email address"
+                accessibilityHint="Enter your email address to sign in"
+                accessibilityRole="none"
               />
               {emailError ? (
-                <Text style={styles.errorText}>{emailError}</Text>
+                <Text 
+                  style={styles.errorText}
+                  accessibilityLiveRegion="polite"
+                  accessibilityRole="alert"
+                >
+                  {emailError}
+                </Text>
               ) : null}
             </View>
 
@@ -168,15 +190,28 @@ const LoginScreen: React.FC = () => {
                 returnKeyType="done"
                 onSubmitEditing={handleLogin}
                 editable={!isLoading}
+                accessibilityLabel="Password"
+                accessibilityHint="Enter your password to sign in"
+                accessibilityRole="none"
               />
               {passwordError ? (
-                <Text style={styles.errorText}>{passwordError}</Text>
+                <Text 
+                  style={styles.errorText}
+                  accessibilityLiveRegion="polite"
+                  accessibilityRole="alert"
+                >
+                  {passwordError}
+                </Text>
               ) : null}
             </View>
 
             {/* Global Error Message */}
             {error ? (
-              <View style={styles.globalErrorContainer}>
+              <View 
+                style={styles.globalErrorContainer}
+                accessibilityLiveRegion="assertive"
+                accessibilityRole="alert"
+              >
                 <Text style={styles.globalErrorText}>{error}</Text>
               </View>
             ) : null}
@@ -190,11 +225,50 @@ const LoginScreen: React.FC = () => {
               onPress={handleLogin}
               disabled={isLoading}
               activeOpacity={0.7} // Visual feedback on press (Requirement 11.8)
+              accessibilityLabel="Sign in"
+              accessibilityHint="Double tap to sign in with your email and password"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: isLoading, busy: isLoading }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               {isLoading ? (
-                <ActivityIndicator color={theme.colors.text.inverse} />
+                <ActivityIndicator 
+                  color={theme.colors.text.inverse}
+                  accessibilityLabel="Signing in"
+                />
               ) : (
                 <Text style={styles.buttonText}>Sign In</Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={styles.dividerContainer}>
+              <View style={styles.divider} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.divider} />
+            </View>
+
+            {/* Google Sign-In Button */}
+            <TouchableOpacity
+              style={[
+                styles.googleButton,
+                isLoading ? styles.buttonDisabled : null,
+              ]}
+              onPress={handleGoogleSignIn}
+              disabled={isLoading}
+              activeOpacity={0.7}
+              accessibilityLabel="Sign in with Google"
+              accessibilityHint="Double tap to sign in using your Google account"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: isLoading, busy: isLoading }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              {isLoading ? (
+                <ActivityIndicator color={theme.colors.text.primary} />
+              ) : (
+                <>
+                  <Text style={styles.googleButtonText}>Sign in with Google</Text>
+                </>
               )}
             </TouchableOpacity>
           </View>
@@ -293,6 +367,36 @@ const createStyles = (theme: any) =>
     buttonText: {
       ...theme.typography.subheading, // Typography hierarchy (Requirement 11.4)
       color: theme.colors.text.inverse,
+      fontWeight: '600',
+    },
+    dividerContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: theme.spacing.xl, // 20px spacing
+    },
+    divider: {
+      flex: 1,
+      height: 1,
+      backgroundColor: theme.colors.border,
+    },
+    dividerText: {
+      ...theme.typography.caption,
+      color: theme.colors.text.secondary,
+      marginHorizontal: theme.spacing.md, // 12px spacing
+    },
+    googleButton: {
+      backgroundColor: theme.colors.card,
+      borderRadius: theme.borderRadius.md, // 8px rounded corners
+      padding: theme.spacing.lg, // 16px spacing
+      alignItems: 'center',
+      minHeight: 48, // Minimum touch target size
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      ...theme.shadows.card,
+    },
+    googleButtonText: {
+      ...theme.typography.subheading,
+      color: theme.colors.text.primary,
       fontWeight: '600',
     },
   });

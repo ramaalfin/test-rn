@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,6 +17,7 @@ import ErrorState from '../../../components/ErrorState';
 import EmptyState from '../../../components/EmptyState';
 import useAuthStore from '../../../stores/useAuthStore';
 import { useItems } from '../hooks';
+import { useErrorHandler } from '../../../hooks/useErrorHandler';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   AppStackParamList,
@@ -27,11 +29,13 @@ const HomeScreen: React.FC = () => {
     data: items,
     isLoading,
     isError,
+    error,
     refetch,
     isRefetching,
   } = useItems();
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { user } = useAuthStore();
+  const { getErrorDisplayInfo } = useErrorHandler();
 
   const theme = useAppTheme();
 
@@ -46,6 +50,27 @@ const HomeScreen: React.FC = () => {
       backgroundColor: theme.colors.surface,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.border,
+    },
+    userInfoContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    profilePictureContainer: {
+      marginRight: theme.spacing.md,
+    },
+    profilePicture: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: theme.colors.border,
+    },
+    userTextContainer: {
+      flex: 1,
+    },
+    nameText: {
+      ...theme.typography.subheading,
+      fontWeight: '600',
+      marginBottom: theme.spacing.xs,
     },
     emailText: {
       ...theme.typography.body,
@@ -65,16 +90,48 @@ const HomeScreen: React.FC = () => {
   };
 
   const renderHeader = () => (
-    <View style={styles.header}>
-      <Text style={styles.emailText}>
-        {user?.email || 'Not logged in'}
-      </Text>
+    <View 
+      style={styles.header}
+      accessibilityRole="header"
+    >
+      <View style={styles.userInfoContainer}>
+        {user?.picture && (
+          <View style={styles.profilePictureContainer}>
+            <Image
+              source={{ uri: user.picture }}
+              style={styles.profilePicture}
+              accessibilityLabel={`Profile picture of ${user.name || 'user'}`}
+              accessibilityRole="image"
+            />
+          </View>
+        )}
+        <View style={styles.userTextContainer}>
+          {user?.name && (
+            <Text 
+              style={styles.nameText}
+              accessibilityRole="text"
+            >
+              {user.name}
+            </Text>
+          )}
+          <Text 
+            style={styles.emailText}
+            accessibilityRole="text"
+          >
+            {user?.email || 'Not logged in'}
+          </Text>
+        </View>
+      </View>
     </View>
   );
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View 
+        style={styles.container}
+        accessibilityLabel="Loading items"
+        accessibilityRole="none"
+      >
         {renderHeader()}
         <View style={styles.skeletonContainer}>
           {Array.from({ length: 5 }).map((_, index) => (
@@ -86,11 +143,14 @@ const HomeScreen: React.FC = () => {
   }
 
   if (isError) {
+    const errorInfo = getErrorDisplayInfo(error);
     return (
       <View style={styles.container}>
         {renderHeader()}
         <ErrorState
-          message="Failed to load items. Please try again."
+          message={errorInfo.message}
+          icon={errorInfo.icon}
+          actionText={errorInfo.actionText}
           onRetry={() => refetch()}
         />
       </View>
@@ -126,8 +186,11 @@ const HomeScreen: React.FC = () => {
             onRefresh={refetch}
             colors={[theme.colors.secondary]}
             tintColor={theme.colors.secondary}
+            accessibilityLabel="Pull to refresh items"
           />
         }
+        accessibilityLabel={`List of ${items?.length || 0} items`}
+        accessibilityRole="list"
       />
     </View>
   );

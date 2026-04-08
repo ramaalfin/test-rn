@@ -7,6 +7,7 @@ export const useAuth = () => {
         isLoading,
         error,
         login,
+        loginWithGoogle,
         logout,
         clearError,
     } = useAuthStore();
@@ -14,6 +15,14 @@ export const useAuth = () => {
     const handleLogin = async (email: string, password: string): Promise<void> => {
         try {
             await login(email, password);
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const handleLoginWithGoogle = async (): Promise<void> => {
+        try {
+            await loginWithGoogle();
         } catch (error) {
             throw error;
         }
@@ -36,6 +45,7 @@ export const useAuth = () => {
         clearError,
 
         login: handleLogin,
+        loginWithGoogle: handleLoginWithGoogle,
         logout: handleLogout,
     };
 };

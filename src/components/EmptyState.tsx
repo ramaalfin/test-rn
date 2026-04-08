@@ -17,14 +17,33 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   action,
 }) => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.icon}>{icon}</Text>
-      <Text style={styles.message}>{message}</Text>
+    <View 
+      style={styles.container}
+      accessibilityRole="none"
+    >
+      <Text 
+        style={styles.icon}
+        accessibilityLabel="Empty state icon"
+        accessibilityRole="image"
+      >
+        {icon}
+      </Text>
+      <Text 
+        style={styles.message}
+        accessibilityRole="text"
+      >
+        {message}
+      </Text>
       {action && (
         <TouchableOpacity
           style={styles.actionButton}
           onPress={action.onPress}
-          activeOpacity={0.7}>
+          activeOpacity={0.7}
+          accessibilityLabel={action.label}
+          accessibilityHint="Double tap to perform this action"
+          accessibilityRole="button"
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           <Text style={styles.actionButtonText}>{action.label}</Text>
         </TouchableOpacity>
       )}
@@ -55,6 +74,8 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
     marginTop: theme.spacing.md,
+    minHeight: 44,
+    minWidth: 44,
   },
   actionButtonText: {
     ...theme.typography.label,

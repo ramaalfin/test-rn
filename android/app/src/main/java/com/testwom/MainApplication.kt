@@ -1,4 +1,4 @@
-package com.moviesearchapp
+package com.testwom
 
 import android.app.Application
 import com.facebook.react.PackageList

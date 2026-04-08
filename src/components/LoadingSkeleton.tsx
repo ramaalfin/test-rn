@@ -56,6 +56,9 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = React.memo(({
         },
         style,
       ]}
+      accessibilityLabel="Loading"
+      accessibilityRole="none"
+      accessible={false}
     >
       <Animated.View
         style={[
@@ -85,6 +88,9 @@ export const SkeletonCard: React.FC<{ style?: ViewStyle }> = React.memo(({ style
         theme.shadows.card,
         style,
       ]}
+      accessibilityLabel="Loading content"
+      accessibilityRole="none"
+      accessible={false}
     >
       <LoadingSkeleton width="60%" height={24} borderRadius={4} />
       <View style={{ height: theme.spacing.md }} />

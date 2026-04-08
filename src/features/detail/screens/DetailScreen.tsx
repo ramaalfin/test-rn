@@ -8,6 +8,7 @@ import ErrorState from '../../../components/ErrorState';
 import EmptyState from '../../../components/EmptyState';
 import useAppTheme from '../../../hooks/useAppTheme';
 import { useItemDetail } from '../hooks';
+import { useErrorHandler } from '../../../hooks/useErrorHandler';
 
 type DetailScreenProps = NativeStackScreenProps<AppStackParamList, 'Detail'>;
 
@@ -40,6 +41,7 @@ type DetailScreenProps = NativeStackScreenProps<AppStackParamList, 'Detail'>;
 const DetailScreen: React.FC<DetailScreenProps> = ({route}) => {
   const {itemId} = route.params;
   const theme = useAppTheme();
+  const { getErrorDisplayInfo } = useErrorHandler();
 
   const {data: item, isLoading, isError, error, refetch} = useItemDetail(itemId);
 
@@ -49,7 +51,11 @@ const DetailScreen: React.FC<DetailScreenProps> = ({route}) => {
    */
   if (isLoading) {
     return (
-      <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <View 
+        style={[styles.container, {backgroundColor: theme.colors.background}]}
+        accessibilityLabel="Loading item details"
+        accessibilityRole="none"
+      >
         <View style={[styles.content, {padding: theme.spacing.lg}]}>
           <SkeletonCard />
         </View>
@@ -60,12 +66,16 @@ const DetailScreen: React.FC<DetailScreenProps> = ({route}) => {
   /**
    * Error State
    * Requirements: 6.5 - Display error state with retry button
+   * Requirements: 14.1, 14.2, 14.3 - Network error detection and user-friendly messages
    */
   if (isError) {
+    const errorInfo = getErrorDisplayInfo(error);
     return (
       <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
         <ErrorState
-          message={error instanceof Error ? error.message : 'Failed to load item details'}
+          message={errorInfo.message}
+          icon={errorInfo.icon}
+          actionText={errorInfo.actionText}
           onRetry={() => refetch()}
         />
       </View>
@@ -96,7 +106,11 @@ const DetailScreen: React.FC<DetailScreenProps> = ({route}) => {
    * - 11.7: Structured layout with visual hierarchy
    */
   return (
-    <ScrollView style={[styles.container, {backgroundColor: theme.colors.background}]}>
+    <ScrollView 
+      style={[styles.container, {backgroundColor: theme.colors.background}]}
+      accessibilityLabel={`Details for ${item.title}`}
+      accessibilityRole="none"
+    >
       <View style={[styles.content, {padding: theme.spacing.lg}]}>
         <CardItem
           item={item}
