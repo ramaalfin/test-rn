@@ -30,7 +30,7 @@ const RootNavigator: React.FC = () => {
     checkAuth().catch((error) => {
       console.error('[RootNavigator] Error during checkAuth:', error);
     });
-  }, []);
+  }, [checkAuth]);
 
   useEffect(() => {
     console.log('[RootNavigator] State changed:', { isAuthenticated, isLoading });

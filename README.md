@@ -1,125 +1,322 @@
-# Auth Starter Project
+# TestRN - React Native Authentication App
 
-A production-ready React Native starter project with JWT authentication, built with TypeScript, React Navigation, React Query, and Zustand for state management.
+Aplikasi React Native dengan fitur autentikasi menggunakan Google OAuth dan Email/Password login.
 
-## Features
+## 📋 Daftar Isi
 
-- 🔐 JWT-based authentication with secure token management
-- 🎨 Modern UI with skeleton loaders and error states
-- 🌓 Dark mode support
-- 📱 Feature-based architecture
-- 🔄 React Query for data fetching and caching
-- 🎯 TypeScript with strict mode
-- ♿ Accessibility support
-- 🧪 Comprehensive test coverage
+- [Fitur](#fitur)
+- [Teknologi](#teknologi)
+- [Prasyarat](#prasyarat)
+- [Instalasi](#instalasi)
+- [Konfigurasi](#konfigurasi)
+- [Menjalankan Aplikasi](#menjalankan-aplikasi)
+- [Kredensial Login](#kredensial-login)
+- [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
+- [Dokumentasi](#dokumentasi)
 
-## Setup
+## ✨ Fitur
 
-### Prerequisites
+- 🔐 **Google OAuth Authentication** - Login menggunakan akun Google
+- 📧 **Email/Password Login** - Login tradisional dengan email dan password
+- 🎨 **Dark Mode** - Tema gelap dan terang yang dapat diubah
+- 🔒 **JWT Token Management** - Token dengan expirasi 1 jam
+- 💾 **Persistent Session** - Session tersimpan menggunakan AsyncStorage
+- 📱 **Cross-Platform** - Support iOS dan Android
+- ✅ **Form Validation** - Validasi form menggunakan React Hook Form dan Zod
+- 🚀 **Type-Safe** - Fully typed dengan TypeScript
 
-- Node.js >= 22
-- Yarn
-- React Native development environment ([Setup Guide](https://reactnative.dev/docs/set-up-your-environment))
-- Google OAuth credentials (optional, for Google Sign-In)
+## 🛠 Teknologi
 
-### Installation
-
-```bash
-# 1. Install dependencies
-yarn install
-
-# 2. Configure environment variables
-cp .env.example .env
-# Edit .env and add your Google OAuth credentials (optional)
-
-# 3. Install iOS pods (macOS only)
-cd ios && bundle install && bundle exec pod install && cd ..
-
-# 4. Run the app
-yarn ios     # or
-yarn android
-```
-
-## Project Structure
-
-```
-src/
-├── features/           # Feature-based modules
-│   ├── auth/          # Authentication (login, token management)
-│   ├── home/          # Home screen with item list
-│   ├── detail/        # Detail screen
-│   └── settings/      # Settings and logout
-├── components/        # Shared reusable components
-├── navigation/        # Navigation configuration
-├── services/          # API client and services
-├── hooks/             # Custom hooks
-├── stores/            # Zustand stores
-├── theme/             # Design system tokens
-└── types/             # TypeScript type definitions
-```
-
-## Architecture
-
-### Authentication Flow
-
-1. User enters credentials on login screen
-2. AuthService validates and generates JWT token
-3. Token is stored securely via TokenManager
-4. API client automatically includes token in requests
-5. On 401 response, user is automatically logged out
-
-### Data Fetching
-
-- Uses JSONPlaceholder API for demo data
-- React Query handles caching and refetching
-- Automatic retry logic for failed requests
-- Optimistic updates for better UX
-
-### State Management
-
-- **Zustand** for client state (auth, settings)
-- **React Query** for server state (API data)
-- **AsyncStorage** for persistence
-
-## Key Technologies
-
-- **React Native 0.84** - Mobile framework
-- **TypeScript** - Type safety
-- **React Navigation** - Navigation
-- **React Query** - Data fetching
+- **React Native** 0.84.1
+- **TypeScript** 5.8.3
+- **React Navigation** 7.x
 - **Zustand** - State management
+- **React Hook Form** - Form handling
+- **Zod** - Schema validation
 - **Axios** - HTTP client
 - **AsyncStorage** - Local storage
 - **Google Sign-In** - OAuth authentication
 
-## Testing
+## 📦 Prasyarat
+
+Pastikan Anda sudah menginstall:
+
+- **Node.js** >= 22.11.0
+- **npm** atau **yarn**
+- **React Native CLI**
+- **Xcode** (untuk iOS development)
+- **Android Studio** (untuk Android development)
+- **CocoaPods** (untuk iOS dependencies)
+
+## 🚀 Instalasi
+
+### 1. Clone Repository
 
 ```bash
-# Run all tests
-yarn test
-
-# Run tests in watch mode
-yarn test --watch
-
-# Run tests with coverage
-yarn test --coverage
+git clone <repository-url>
+cd test-rn
 ```
 
-## Scripts
+### 2. Install Dependencies
 
 ```bash
-yarn start          # Start Metro bundler
-yarn android        # Run on Android
-yarn ios            # Run on iOS
-yarn lint           # Run ESLint
-yarn test           # Run tests
+npm install
 ```
 
-## Documentation
+### 3. Install iOS Dependencies
 
-- [Google OAuth Setup](./GOOGLE_OAUTH_SETUP.md) - Guide for setting up Google Sign-In
-- [JWT Implementation](./JWT_IMPLEMENTATION.md) - Details on JWT token management
+```bash
+cd ios
+pod install
+cd ..
+```
 
-## License
+## ⚙️ Konfigurasi
 
-MIT
+### 1. Environment Variables
+
+Copy file `.env.example` menjadi `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Edit file `.env` dan isi dengan kredensial Anda:
+
+```env
+# Google OAuth Configuration
+GOOGLE_WEB_CLIENT_ID=your_web_client_id_here.apps.googleusercontent.com
+GOOGLE_IOS_CLIENT_ID=your_ios_client_id_here.apps.googleusercontent.com
+GOOGLE_ANDROID_CLIENT_ID=your_android_client_id_here.apps.googleusercontent.com
+
+# JWT Secret Key
+JWT_SECRET=your_secure_jwt_secret_key_here
+```
+
+### 2. Google OAuth Setup
+
+Untuk mendapatkan Google OAuth credentials:
+
+1. Buka [Google Cloud Console](https://console.cloud.google.com/)
+2. Buat project baru atau pilih project yang sudah ada
+3. Enable Google Sign-In API
+4. Buat OAuth 2.0 Client IDs untuk:
+   - Web application
+   - iOS application
+   - Android application
+
+**Panduan lengkap:** Lihat [docs/GOOGLE_OAUTH_SETUP.md](docs/GOOGLE_OAUTH_SETUP.md)
+
+### 3. Generate JWT Secret
+
+Gunakan salah satu cara berikut untuk generate JWT secret:
+
+```bash
+# Menggunakan Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Menggunakan OpenSSL
+openssl rand -hex 32
+```
+
+## 🏃 Menjalankan Aplikasi
+
+### iOS
+
+```bash
+npm run ios
+```
+
+Atau buka `ios/TestRN.xcworkspace` di Xcode dan run dari sana.
+
+### Android
+
+```bash
+npm run android
+```
+
+Pastikan emulator Android sudah berjalan atau device sudah terkoneksi.
+
+### Metro Bundler
+
+Jika Metro bundler tidak start otomatis:
+
+```bash
+npm start
+```
+
+### Reset Cache
+
+Jika mengalami masalah, coba reset cache:
+
+```bash
+npm run reset
+```
+
+## 🔑 Kredensial Login
+
+### Login dengan Email/Password
+
+Aplikasi menggunakan [JSONPlaceholder API](https://jsonplaceholder.typicode.com/) untuk mock authentication. Anda bisa login dengan **email apapun** dan **password apapun**.
+
+**Contoh kredensial yang bisa digunakan:**
+
+```
+Email: Sincere@april.biz
+Password: (password apapun)
+
+Email: Shanna@melissa.tv
+Password: (password apapun)
+
+Email: Nathan@yesenia.net
+Password: (password apapun)
+```
+
+> **Catatan:** Sistem akan mengambil user pertama dari JSONPlaceholder API jika email tidak ditemukan. Password tidak divalidasi karena ini adalah mock API.
+
+### Login dengan Google
+
+1. Tap tombol "Sign in with Google"
+2. Pilih akun Google Anda
+3. Berikan permission yang diminta
+4. Anda akan diarahkan ke Home Screen
+
+## 🧪 Testing
+
+### Run Unit Tests
+
+```bash
+npm test
+```
+
+### Run Specific Test
+
+```bash
+# JWT Expiration Tests
+npm test -- src/features/auth/services/__tests__/jwtExpiration.test.ts
+
+# Auth Store Tests
+npm test -- src/stores/__tests__/authStoreExpiration.test.ts
+```
+
+### Manual Testing
+
+Lihat panduan testing lengkap:
+- [Integration Testing Guide](docs/INTEGRATION_TESTING_GUIDE.md)
+- [Android Testing Instructions](docs/ANDROID_TESTING_INSTRUCTIONS.md)
+- [JWT Expiration Testing](docs/JWT_EXPIRATION_TESTING.md)
+- [Quick Test Checklist](docs/QUICK_TEST_CHECKLIST.md)
+
+## 🐛 Troubleshooting
+
+### Error: "No internet connection"
+
+1. Pastikan emulator/device memiliki koneksi internet
+2. Test ping: `adb shell ping -c 4 8.8.8.8`
+3. Restart emulator
+4. Clear cache: `npm run reset`
+
+**Panduan lengkap:** [docs/NETWORK_TROUBLESHOOTING.md](docs/NETWORK_TROUBLESHOOTING.md)
+
+### Error: Zod Export Namespace
+
+```bash
+npm install --save-dev @babel/plugin-transform-export-namespace-from
+npm run reset
+```
+
+**Panduan lengkap:** [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+
+### iOS: "The operation couldn't be completed"
+
+- Verify iOS Client ID di `.env`
+- Verify reversed Client ID di `Info.plist`
+- Pastikan Bundle ID match dengan Google Cloud Console
+
+### Android: "Developer Error" atau "Error 10"
+
+- Verify SHA-1 fingerprint di Google Cloud Console
+- Generate SHA-1: `cd android && ./gradlew signingReport`
+- Pastikan package name match dengan Google Cloud Console
+
+### Token Validation Fails
+
+- Verify `JWT_SECRET` sudah diset di `.env`
+- Pastikan secret minimal 32 karakter
+- Restart app setelah mengubah `.env`
+
+### Dark Mode Tidak Berfungsi
+
+- Pastikan `ThemeContext` sudah terintegrasi dengan `useSettingsStore`
+- Clear AsyncStorage dan restart app
+- Lihat [docs/FIXES.md](docs/FIXES.md) untuk detail
+
+## 📚 Dokumentasi
+
+### Setup & Configuration
+- [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) - Konfigurasi environment variables
+- [Google OAuth Setup](docs/GOOGLE_OAUTH_SETUP.md) - Setup Google OAuth lengkap
+
+### Development
+- [Form Validation](docs/FORM_VALIDATION.md) - Implementasi React Hook Form dan Zod
+- [Fixes Documentation](docs/FIXES.md) - Bug fixes yang sudah dilakukan
+
+### Testing
+- [Integration Testing Guide](docs/INTEGRATION_TESTING_GUIDE.md) - Panduan testing lengkap
+- [Android Testing Instructions](docs/ANDROID_TESTING_INSTRUCTIONS.md) - Testing khusus Android
+- [JWT Expiration Testing](docs/JWT_EXPIRATION_TESTING.md) - Testing token expiration
+- [Quick Test Checklist](docs/QUICK_TEST_CHECKLIST.md) - Checklist testing cepat
+
+### Troubleshooting
+- [Network Troubleshooting](docs/NETWORK_TROUBLESHOOTING.md) - Solusi masalah network
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Panduan troubleshooting umum
+
+## 📁 Struktur Project
+
+```
+test-rn/
+├── src/
+│   ├── components/          # Reusable components
+│   ├── context/            # React contexts (Theme, etc)
+│   ├── features/           # Feature modules
+│   │   ├── auth/          # Authentication feature
+│   │   ├── home/          # Home screen
+│   │   └── settings/      # Settings screen
+│   ├── navigation/         # Navigation configuration
+│   ├── stores/            # Zustand stores
+│   ├── theme/             # Theme configuration
+│   └── types/             # TypeScript types
+├── android/               # Android native code
+├── ios/                   # iOS native code
+├── docs/                  # Documentation
+└── __tests__/            # Test files
+```
+
+## 🔒 Security Notes
+
+- ⚠️ Jangan commit file `.env` ke version control
+- ⚠️ Gunakan JWT secret yang kuat untuk production
+- ⚠️ Rotate secrets secara berkala di production
+- ⚠️ Gunakan HTTPS untuk semua API calls di production
+- ⚠️ Implementasikan rate limiting untuk login endpoints
+
+## 🤝 Contributing
+
+1. Fork repository
+2. Buat feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push ke branch (`git push origin feature/AmazingFeature`)
+5. Buat Pull Request
+
+## 📄 License
+
+This project is private and proprietary.
+
+## 👥 Contact
+
+Untuk pertanyaan atau support, silakan hubungi tim development.
+
+---
+
+**Happy Coding! 🚀**

@@ -1,4 +1,4 @@
-package com.testwom
+package com.testrn
 
 import android.app.Application
 import com.facebook.react.PackageList
