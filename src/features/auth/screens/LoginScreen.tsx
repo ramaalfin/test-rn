@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
@@ -11,57 +10,35 @@ import {
   Keyboard,
   ActivityIndicator,
 } from 'react-native';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '../hooks/useAuth';
-import { validateEmail, validatePassword } from '../services/authService';
 import { useAppTheme } from '../../../hooks/useAppTheme';
+import FormInput from '../../../components/FormInput';
+import { loginSchema, LoginFormData } from '../schemas/loginSchema';
 
 const LoginScreen: React.FC = () => {
   const theme = useAppTheme();
   const { login, loginWithGoogle, isLoading, error, clearError } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-
-  const passwordInputRef = React.useRef<TextInput>(null);
-
-  const validateForm = (): boolean => {
-    let isValid = true;
-
-    setEmailError('');
-    setPasswordError('');
+  const onSubmit = async (data: LoginFormData) => {
+    Keyboard.dismiss();
     clearError();
 
-    if (!email.trim()) {
-      setEmailError('Email is required');
-      isValid = false;
-    } else if (!validateEmail(email)) {
-      setEmailError('Please enter a valid email address');
-      isValid = false;
-    }
-
-    if (!password) {
-      setPasswordError('Password is required');
-      isValid = false;
-    } else if (!validatePassword(password)) {
-      setPasswordError('Password must be at least 6 characters');
-      isValid = false;
-    }
-
-    return isValid;
-  };
-
-  const handleLogin = async () => {
-    Keyboard.dismiss();
-
-    if (!validateForm()) {
-      return;
-    }
-
     try {
-      await login(email, password);
+      await login(data.email, data.password);
     } catch (err) {
       console.error('Login error:', err);
     }
@@ -72,26 +49,6 @@ const LoginScreen: React.FC = () => {
       await loginWithGoogle();
     } catch (err) {
       console.error('Google Sign-In error:', err);
-    }
-  };
-
-  const handleEmailChange = (text: string) => {
-    setEmail(text);
-    if (emailError) {
-      setEmailError('');
-    }
-    if (error) {
-      clearError();
-    }
-  };
-
-  const handlePasswordChange = (text: string) => {
-    setPassword(text);
-    if (passwordError) {
-      setPasswordError('');
-    }
-    if (error) {
-      clearError();
     }
   };
 
@@ -108,68 +65,34 @@ const LoginScreen: React.FC = () => {
             <Text style={styles.title}>Welcome Back</Text>
             <Text style={styles.subtitle}>Sign in to continue</Text>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  emailError ? styles.inputError : null,
-                ]}
-                placeholder="Enter your email"
-                placeholderTextColor={theme.colors.text.secondary}
-                value={email}
-                onChangeText={handleEmailChange}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="next"
-                onSubmitEditing={() => passwordInputRef.current?.focus()}
-                editable={!isLoading}
-                accessibilityLabel="Email address"
-                accessibilityHint="Enter your email address to sign in"
-                accessibilityRole="none"
-              />
-              {emailError ? (
-                <Text 
-                  style={styles.errorText}
-                  accessibilityLiveRegion="polite"
-                  accessibilityRole="alert"
-                >
-                  {emailError}
-                </Text>
-              ) : null}
-            </View>
+            <FormInput
+              name="email"
+              control={control}
+              label="Email"
+              placeholder="Enter your email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="next"
+              editable={!isLoading}
+              error={errors.email}
+              accessibilityLabel="Email address"
+              accessibilityHint="Enter your email address to sign in"
+            />
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                ref={passwordInputRef}
-                style={[
-                  styles.input,
-                  passwordError ? styles.inputError : null,
-                ]}
-                placeholder="Enter your password"
-                placeholderTextColor={theme.colors.text.secondary}
-                value={password}
-                onChangeText={handlePasswordChange}
-                secureTextEntry
-                returnKeyType="done"
-                onSubmitEditing={handleLogin}
-                editable={!isLoading}
-                accessibilityLabel="Password"
-                accessibilityHint="Enter your password to sign in"
-                accessibilityRole="none"
-              />
-              {passwordError ? (
-                <Text 
-                  style={styles.errorText}
-                  accessibilityLiveRegion="polite"
-                  accessibilityRole="alert"
-                >
-                  {passwordError}
-                </Text>
-              ) : null}
-            </View>
+            <FormInput
+              name="password"
+              control={control}
+              label="Password"
+              placeholder="Enter your password"
+              secureTextEntry
+              returnKeyType="done"
+              onSubmitEditing={handleSubmit(onSubmit)}
+              editable={!isLoading}
+              error={errors.password}
+              accessibilityLabel="Password"
+              accessibilityHint="Enter your password to sign in"
+            />
 
             {error ? (
               <View 
@@ -186,7 +109,7 @@ const LoginScreen: React.FC = () => {
                 styles.button,
                 isLoading ? styles.buttonDisabled : null,
               ]}
-              onPress={handleLogin}
+              onPress={handleSubmit(onSubmit)}
               disabled={isLoading}
               activeOpacity={0.7}
               accessibilityLabel="Sign in"
@@ -267,31 +190,6 @@ const createStyles = (theme: any) =>
       color: theme.colors.text.secondary,
       marginBottom: theme.spacing.xxxl,
       textAlign: 'center',
-    },
-    inputContainer: {
-      marginBottom: theme.spacing.xl,
-    },
-    label: {
-      ...theme.typography.label,
-      marginBottom: theme.spacing.sm,
-    },
-    input: {
-      ...theme.typography.body,
-      backgroundColor: theme.colors.surface,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      borderRadius: theme.borderRadius.md,
-      padding: theme.spacing.md,
-      color: theme.colors.text.primary,
-      minHeight: 48,
-    },
-    inputError: {
-      borderColor: theme.colors.error,
-    },
-    errorText: {
-      ...theme.typography.caption,
-      color: theme.colors.error,
-      marginTop: theme.spacing.xs,
     },
     globalErrorContainer: {
       backgroundColor: `${theme.colors.error}15`,

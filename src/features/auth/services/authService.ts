@@ -99,10 +99,6 @@ export const validateEmail = (email: string): boolean => {
     return emailRegex.test(email);
 };
 
-export const validatePassword = (password: string): boolean => {
-    return password.length >= 6;
-};
-
 const generateMockJWT = (user: User): string => {
     const header = { alg: 'HS256', typ: 'JWT' };
     const payload = {
@@ -113,24 +109,27 @@ const generateMockJWT = (user: User): string => {
         exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
     };
 
-    const encodedHeader = encode(JSON.stringify(header));
-    const encodedPayload = encode(JSON.stringify(payload));
-    const signature = 'mock_signature';
+    const encodedHeader = encode(JSON.stringify(header)).replace(/[=]/g, '');
+    const encodedPayload = encode(JSON.stringify(payload)).replace(/[=]/g, '');
+
+    const data = `mock-secret.${encodedHeader}.${encodedPayload}`;
+    const signature = encode(data).replace(/[=]/g, '');
 
     return `${encodedHeader}.${encodedPayload}.${signature}`;
 };
 
 export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    if (!validateEmail(credentials.email)) {
-        throw new Error('Please enter a valid email address');
-    }
-
-    if (!validatePassword(credentials.password)) {
-        throw new Error('Password must be at least 6 characters');
-    }
-
     try {
-        const response = await axios.get(`${JSONPLACEHOLDER_BASE_URL}/users`);
+        console.log('[AuthService] Starting login request...');
+        console.log('[AuthService] API URL:', `${JSONPLACEHOLDER_BASE_URL}/users`);
+
+        const response = await axios.get(`${JSONPLACEHOLDER_BASE_URL}/users`, {
+            timeout: 10000, // 10 detik timeout
+        });
+
+        console.log('[AuthService] Response status:', response.status);
+        console.log('[AuthService] Response data length:', response.data?.length);
+
         const users = response.data;
 
         let user = users.find((u: any) => u.email.toLowerCase() === credentials.email.toLowerCase());
@@ -158,7 +157,16 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
             user: authenticatedUser,
         };
     } catch (error) {
+        console.error('[AuthService] Login error:', error);
+
         if (axios.isAxiosError(error)) {
+            console.error('[AuthService] Axios error details:', {
+                message: error.message,
+                code: error.code,
+                response: error.response?.status,
+                hasResponse: !!error.response,
+            });
+
             if (!error.response) {
                 throw new Error('No internet connection. Please check your network.');
             }
@@ -219,8 +227,6 @@ const AuthService = {
     login,
     logout,
     validateToken,
-    validateEmail,
-    validatePassword,
 };
 
 export default AuthService;

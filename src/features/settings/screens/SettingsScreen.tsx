@@ -250,15 +250,6 @@ const SettingsScreen: React.FC = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
-        {user && (
-          <View 
-            style={styles.userInfo}
-            accessibilityLabel={`Logged in as ${user.email}`}
-            accessibilityRole="text"
-          >
-            <Text style={styles.userEmail}>{user.email}</Text>
-          </View>
-        )}
         <TouchableOpacity
           style={styles.logoutButton}
           onPress={handleLogout}
